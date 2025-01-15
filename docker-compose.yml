@@ -1,0 +1,50 @@
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_user_password
+      MYSQL_DATABASE: translogi_delivery_db
+      MYSQL_USER: translogi_user1
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+    secrets:
+      - mysql_root_password
+      - mysql_user_password
+
+  python-app:
+    image: python:3.12-slim
+    container_name: python-container
+    working_dir: /app
+    volumes:
+      - ./app:/app
+    command: python main.py
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_NAME: translogi_delivery_db
+      DB_USER: translogi_user1
+      DB_PASSWORD_FILE: /run/secrets/mysql_user_password
+    networks:
+      - app-network
+    secrets:
+      - mysql_user_password
+
+volumes:
+  mysql-data:
+
+networks:
+  app-network:
+    driver: bridge
+
+secrets:
+  mysql_root_password:
+    file: ./secrets/mysql_root_password
+  mysql_user_password:
+    file: ./secrets/mysql_user_password
