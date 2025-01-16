@@ -1,13 +1,15 @@
-mkdir -p secrets
+# mkdir -p secrets
 
-openssl rand -base64 12 | docker secret create mysql_root_password -
-openssl rand -base64 12 | docker secret create mysql_user_password -
+# openssl rand -base64 12 | docker secret create mysql_root_password -
+# openssl rand -base64 12 | docker secret create mysql_user_password -
 
-docker secret ls
+# docker secret ls
 
-docker swarm init
+# docker swarm init
 
 docker compose up
 
 # MySQL Connection
-# docker exec -it mysql-container mysql -uroot -p
+# docker exec -it mysql-container mysql -u root -p
+# docker-compose up -d
+# docker-compose logs -f
