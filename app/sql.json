@@ -1,5 +1,6 @@
 {
-  "create_delivery_transaction_table_if_not_exists": "CREATE TABLE IF NOT EXISTS translogi_delivery_db.delivery_transaction (order_id VARCHAR(255), agent_age INT, agent_rating FLOAT, store_latitude DECIMAL(10,8), store_longitude DECIMAL(11,8), drop_latitude DECIMAL(10,8), drop_longitude DECIMAL(11,8), order_date DATE, order_time TIME, pickup_time TIME, weather VARCHAR(50), traffic VARCHAR(50), vehicle VARCHAR(50), area VARCHAR(50), delivery_time INT, category VARCHAR(50))",
   "empty_delivery_transaction_table": "DELETE FROM translogi_delivery_db.delivery_transaction",
-  "insert_into_delivery_transaction_table_all_columns": "INSERT INTO translogi_delivery_db.delivery_transaction (order_id, agent_age, agent_rating, store_latitude, store_longitude, drop_latitude, drop_longitude, order_date, order_time, pickup_time, weather, traffic, vehicle, area, delivery_time, category) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+  "insert_into_delivery_transaction_table_all_columns": "INSERT INTO translogi_delivery_db.delivery_transaction (order_id, agent_age, agent_rating, store_latitude, store_longitude, drop_latitude, drop_longitude, order_date, order_time, pickup_time, weather, traffic, vehicle, area, delivery_time, category) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+  "insert_into_traffic_table": "INSERT INTO translogi_delivery_db.traffic (route_name, date_time, distance, duration_traffic, velocity, avg_delay) VALUES (%s, %s, %s, %s, %s, %s)",
+  "insert_into_delivery_traffic_table": "INSERT INTO translogi_delivery_db.delivery_traffic(order_id, traffic_id) VALUES(%s, %s)"
 }

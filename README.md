@@ -41,5 +41,6 @@ The proposed system must deliver the following functionalities:
 
 
 # References
-[Kaggle Amazon Delivery Dataset](https://www.kaggle.com/datasets/sujalsuthar/amazon-delivery-dataset)
+1. [Kaggle Amazon Delivery Dataset](https://www.kaggle.com/datasets/sujalsuthar/amazon-delivery-dataset)
+2. [Traffic in San Pedro, México](https://github.com/edgargutgzz/sanpedro_trafficdata)
 

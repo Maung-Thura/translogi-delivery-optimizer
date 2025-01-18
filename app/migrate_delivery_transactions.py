@@ -44,7 +44,6 @@ def persist(data:DataFrame, sql_json_file:str):
 
         if connection.is_connected():
             cursor = connection.cursor()
-            cursor.execute(queries.get('create_delivery_transaction_table_if_not_exists'))
             cursor.execute(queries.get('empty_delivery_transaction_table'))
 
             # Insert data into the table

@@ -7,9 +7,14 @@
 
 # docker swarm init
 
-docker compose up
+docker volume rm translogi-delivery-optimizer_mysql-data
+
+# docker-compose up --force-recreate
+docker-compose up -d mysql python-app
+docker-compose logs
 
 # MySQL Connection
 # docker exec -it mysql-container mysql -u root -p
 # docker-compose up -d
 # docker-compose logs -f
+# docker volume ls
