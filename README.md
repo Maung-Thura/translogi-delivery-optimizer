@@ -1,4 +1,4 @@
-# translogi-delivery-optimizer
+# translogi-delivery-optimizer (implemented by Maung Thu Ra)
 The system optimizes delivery operations; real-time route optimization, predictive analytics for delivery times, and a dashboard for monitoring and visualization.
 
 # 1. Problem Definition
