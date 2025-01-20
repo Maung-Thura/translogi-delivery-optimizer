@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Optimization Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        #map { height: 500px; width: 100%; }
+        .container { max-width: 800px; margin: auto; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Delivery Optimization Dashboard</h1>
+        <h2>Route Visualization</h2>
+        <div id="map"></div>
+
+        <h2>Submit Order for Prediction</h2>
+        <form id="order-form">
+            <label>Agent Age:</label>
+            <input type="number" id="agent_age" required><br>
+            <label>Agent Rating:</label>
+            <input type="number" step="0.1" id="agent_rating" required><br>
+            <button type="submit">Predict Delivery Time</button>
+        </form>
+        <p id="prediction-result"></p>
+
+        <h2>Operational Insights</h2>
+        <canvas id="metricsChart"></canvas>
+    </div>
+
+    <script>
+        let map = L.map('map').setView([37.7749, -122.4194], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        function fetchOptimizedRoutes() {
+            $.get('/optimize_routes', function(data) {
+                data.optimized_routes.forEach(route => {
+                    let latlngs = route.map(point => [point[0], point[1]]);
+                    L.polyline(latlngs, {color: 'blue'}).addTo(map);
+                });
+            });
+        }
+
+        $('#order-form').submit(function(event) {
+            event.preventDefault();
+            let orderData = {
+                agent_age: $('#agent_age').val(),
+                agent_rating: $('#agent_rating').val()
+            };
+
+            $.post('/predict', JSON.stringify(orderData), function(response) {
+                $('#prediction-result').text('Predicted Delivery Time: ' + response.predicted_delivery_time + ' mins');
+            }, 'json');
+        });
+
+        fetchOptimizedRoutes();
+    </script>
+</body>
+</html>

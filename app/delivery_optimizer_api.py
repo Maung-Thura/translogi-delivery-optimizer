@@ -1,6 +1,5 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify , render_template
 import pickle
-import pulp
 import numpy as np
 import route_optimizer as rop
 
@@ -21,6 +20,10 @@ vehicle_capacity = [50, 50, 50]
 distance_matrix = np.random.randint(1, 100, size=(n_locations, n_locations)).tolist()
 demands = [0] + np.random.randint(1, 10, size=(n_locations - 1)).tolist()
 time_windows = [(0, 100)] + [(np.random.randint(10, 50), np.random.randint(51, 100)) for _ in range(n_locations - 1)]
+
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict_delivery_time():
