@@ -4,5 +4,7 @@ source venv/bin/activate
 export PIP_DEFAULT_TIMEOUT=100
 pip install --upgrade pip
 pip install -r requirements.txt
-sleep 3
+sleep 5
 python main.py
+sleep 5
+python delivery_optimizer_api.py

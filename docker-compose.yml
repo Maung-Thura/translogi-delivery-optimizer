@@ -34,6 +34,8 @@ services:
       DB_USER: ${MYSQL_USER}
       DB_PASSWORD: ${MYSQL_PASSWORD}
       GOOGLE_MAP_API_KEY: ${GOOGLE_MAP_API_KEY}
+    ports:
+      - "5000:5000"
     networks:
       - app-network
 
