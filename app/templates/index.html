@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Optimization</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        #map { height: 500px; width: 100%; }
+        .container { max-width: 800px; margin: auto; padding: 20px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 5px; }
+        .btn { padding: 10px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        .result-box { font-size: 18px; font-weight: bold; margin-top: 10px; }
+        .tab { display: none; }
+        .tab.active { display: block; }
+        .tab-buttons { margin-bottom: 10px; }
+        .tab-buttons button { padding: 10px; margin-right: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tab-buttons">
+            <button onclick="showTab('dashboard')">Delivery Optimization</button>
+            <button onclick="showTab('predict')">Predict Delivery Time</button>
+        </div>
+
+        <div id="dashboard" class="tab active">
+            <h1>Delivery Optimization Dashboard</h1>
+            <h2>Route Optimization</h2>
+            <form id="route-form">
+                <div class="form-group">
+                    <label>Number of Locations:</label>
+                    <input type="number" id="n_locations" required>
+                </div>
+                <div class="form-group">
+                    <label>Number of Vehicles:</label>
+                    <input type="number" id="n_vehicles" required>
+                </div>
+                <div class="form-group">
+                    <label>Vehicle Capacities (comma-separated):</label>
+                    <input type="text" id="vehicle_capacity" required>
+                </div>
+                <button type="submit" class="btn">Optimize Routes</button>
+            </form>
+            <div id="map"></div>
+        </div>
+
+        <div id="predict" class="tab">
+            <h2>Predict Delivery Time</h2>
+            <form id="predict-form">
+                <div class="form-group">
+                    <label>Agent Age:</label>
+                    <input type="number" id="agent_age" required>
+                </div>
+                <div class="form-group">
+                    <label>Agent Rating:</label>
+                    <input type="number" step="0.1" id="agent_rating" required>
+                </div>
+                <div class="form-group">
+                    <label>Store Latitude:</label>
+                    <input type="number" step="0.0001" id="store_latitude" required>
+                </div>
+                <div class="form-group">
+                    <label>Store Longitude:</label>
+                    <input type="number" step="0.0001" id="store_longitude" required>
+                </div>
+                <div class="form-group">
+                    <label>Drop Latitude:</label>
+                    <input type="number" step="0.0001" id="drop_latitude" required>
+                </div>
+                <div class="form-group">
+                    <label>Drop Longitude:</label>
+                    <input type="number" step="0.0001" id="drop_longitude" required>
+                </div>
+                <div class="form-group">
+                    <label>Order Time (minutes):</label>
+                    <input type="number" id="order_time" required>
+                </div>
+                <div class="form-group">
+                    <label>Pickup Time (minutes):</label>
+                    <input type="number" id="pickup_time" required>
+                </div>
+                <div class="form-group">
+                    <label>Weather Condition:</label>
+                    <select id="weather" required>
+                        <option value="Sunny">Sunny</option>
+                        <option value="Rainy">Rainy</option>
+                        <option value="Cloudy">Cloudy</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Traffic Level:</label>
+                    <select id="traffic" required>
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Vehicle Type:</label>
+                    <select id="vehicle" required>
+                        <option value="Bike">Bike</option>
+                        <option value="Car">Car</option>
+                        <option value="Van">Van</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Predict Delivery Time</button>
+            </form>
+            <p id="prediction-result" class="result-box"></p>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        let map = L.map('map').setView([2.3185, 15.5687], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        $('#route-form').submit(function(event) {
+            event.preventDefault();
+            let n_locations = $('#n_locations').val();
+            let n_vehicles = $('#n_vehicles').val();
+            let vehicle_capacity = $('#vehicle_capacity').val().split(',').map(Number);
+
+            fetchOptimizedRoutes(n_locations, n_vehicles, vehicle_capacity);
+        });
+
+        function fetchOptimizedRoutes(n_locations, n_vehicles, vehicle_capacity) {
+            $.ajax({
+                url: '/optimize_routes',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    n_locations: parseInt(n_locations),
+                    n_vehicles: parseInt(n_vehicles),
+                    vehicle_capacity: vehicle_capacity
+                }),
+                dataType: 'json',
+                success: function(data) {
+                    map.eachLayer(function(layer) {
+                        if (!!layer.toGeoJSON) {
+                            map.removeLayer(layer);
+                        }
+                    });
+
+                    data.optimized_routes.forEach(route => {
+                        let latlngs = route.map(point => [point[1], point[0]]);
+                        L.polyline(latlngs, {color: 'blue', weight: 3}).addTo(map);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching optimized routes:", error);
+                }
+            });
+        }
+
+        $('#predict-form').submit(function(event) {
+            event.preventDefault();
+            let formData = {
+                agent_age: $('#agent_age').val(),
+                agent_rating: $('#agent_rating').val(),
+                store_latitude: $('#store_latitude').val(),
+                store_longitude: $('#store_longitude').val(),
+                drop_latitude: $('#drop_latitude').val(),
+                drop_longitude: $('#drop_longitude').val(),
+                order_time: $('#order_time').val(),
+                pickup_time: $('#pickup_time').val(),
+                weather: $('#weather').val(),
+                traffic: $('#traffic').val(),
+                vehicle: $('#vehicle').val()
+            };
+
+            $.ajax({
+                url: '/predict_delivery_time',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(data) {
+                    $('#prediction-result').text('Predicted Delivery Time: ' + data.predicted_time + ' minutes');
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error predicting delivery time:", error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import migrate_delivery_transactions as mdt
 import migrate_live_traffic_data as mlt
 from migrate_live_traffic_data import Route
+import delivery_optimizer_api as doa
 
 # migrate delivery transactions
 mdt.migrate('sql.json')
@@ -16,3 +17,6 @@ route = Route("Kathleen K Mar 25 Evening Delivery", (12.913041, 77.683237), (13.
 delivery_route_map[order_id] = route
 
 mlt.migrate(delivery_route_map, 'sql.json')
+
+# start web app
+doa.main()

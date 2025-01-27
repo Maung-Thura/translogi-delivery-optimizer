@@ -7,37 +7,69 @@ app = Flask(__name__)
 
 # TODO: change Flask to production ready server, Gunicorn, Waitress, uWSGI, Nginx, Apache, etc.
 
-# Load trained model
-model_path = "delivery_time_model.pkl"
-with open(model_path, "rb") as file:
-    model = pickle.load(file)
-
-# TODO: link with client request
-# Sample VRP data
-n_locations = 10
-n_vehicles = 3
-vehicle_capacity = [50, 50, 50]
-distance_matrix = np.random.randint(1, 100, size=(n_locations, n_locations)).tolist()
-demands = [0] + np.random.randint(1, 10, size=(n_locations - 1)).tolist()
-time_windows = [(0, 100)] + [(np.random.randint(10, 50), np.random.randint(51, 100)) for _ in range(n_locations - 1)]
-
 @app.route('/')
 def home():
     return render_template('index.html')
 
-@app.route('/predict', methods=['POST'])
+# Load the trained model
+with open("delivery_time_model.pkl", "rb") as model_file:
+    model = pickle.load(model_file)
+
+@app.route('/predict_delivery_time', methods=['POST'])
 def predict_delivery_time():
-    data = request.json
-    features = [data[key] for key in data]
-    prediction = model.predict([features])[0]
-    return jsonify({"predicted_delivery_time": prediction})
+    try:
+        data = request.get_json()
 
-@app.route('/optimize_routes', methods=['GET'])
+        # Extract features from the request
+        numeric_features = [
+            "agent_age", "agent_rating", "store_latitude", "store_longitude",
+            "drop_latitude", "drop_longitude", "order_time", "pickup_time",
+            "avg_delivery_time_by_area", "avg_delivery_time_by_traffic_and_weather",
+            "vehicle_capacity_utilization"
+        ]
+        categorical_features = ["weather", "traffic", "vehicle", "area", "category"]
+
+        # Prepare the feature array
+        numeric_values = [float(data[feature]) for feature in numeric_features]
+        categorical_values = [data[feature] for feature in categorical_features]
+
+        input_features = np.array(numeric_values + categorical_values).reshape(1, -1)
+
+        # Predict delivery time
+        predicted_time = model.predict(input_features)[0]
+
+        return jsonify({"predicted_time": predicted_time})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route('/optimize_routes', methods=['POST'])
 def optimize_routes():
-    # TODO: request.data
-    routes = rop.optimize(n_locations, n_vehicles, vehicle_capacity)
-    return jsonify({"optimized_routes": routes})
+    if request.content_type != 'application/json':
+        return jsonify({"error": "Content-Type must be application/json"}), 415  # Explicitly handle wrong content type
 
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Invalid JSON data"}), 400
+
+        n_locations = int(data.get('n_locations', 0))
+        n_vehicles = int(data.get('n_vehicles', 0))
+        vehicle_capacity = data.get('vehicle_capacity', [])
+
+        if not isinstance(vehicle_capacity, list) or not all(isinstance(i, int) for i in vehicle_capacity):
+            return jsonify({"error": "vehicle_capacity must be a list of integers"}), 400
+
+        optimized_routes = rop.optimize(n_locations, n_vehicles, vehicle_capacity)
+
+        return jsonify({"optimized_routes": optimized_routes})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500  # Handle any unexpected errors
+
+def main():
+    app.run(debug=True)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    main()
