@@ -1,7 +1,7 @@
 import migrate_delivery_transactions as mdt
 import migrate_live_traffic_data as mlt
 from migrate_live_traffic_data import Route
-import delivery_optimizer_api as doa
+import predictive_modeling as pm
 
 # migrate delivery transactions
 mdt.migrate('sql.json')
@@ -18,5 +18,5 @@ delivery_route_map[order_id] = route
 
 mlt.migrate(delivery_route_map, 'sql.json')
 
-# start web app
-doa.main()
+# generate predictive model
+pm.generate_model()
